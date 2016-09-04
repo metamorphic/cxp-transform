@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        maven {
+            url "${artifactory_pluginsUrl}"
+            credentials {
+                username = "${artifactory_user}"
+                password = "${artifactory_password}"
+            }
+        }
+    }
+    dependencies {
+        //Check for the latest version here: http://plugins.gradle.org/plugin/com.jfrog.artifactory
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.1.1'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.artifactory'
+
+group = 'io.metamorphic'
+version = '1.0'
+
+jar {
+    baseName = 'cxp-transform'
+    version = '1.0'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+artifactory {
+    contextUrl = "${artifactory_contextUrl}"   //The base Artifactory URL if not overridden by the publisher/resolver
+    publish {
+        repository {
+            repoKey = 'libs-release-local'
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+            maven = true
+
+        }
+        defaults {
+            publications ('mavenJava')
+        }
+    }
+    resolve {
+        repository {
+            repoKey = 'libs-release'
+            username = "${artifactory_user}"
+            password = "${artifactory_password}"
+            maven = true
+
+        }
+    }
+}
+
+dependencies {
+    compile 'io.metamorphic:cxp-metadata-provider:1.0'
+    compile 'org.springframework:spring-web:4.1.7.RELEASE'
+    compile 'com.google.guava:guava:16.0.1'
+    compile 'joda-time:joda-time:2.5'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.4.6'
+    compile 'com.jayway.jsonpath:json-path:2.0.0'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.5'
+}
